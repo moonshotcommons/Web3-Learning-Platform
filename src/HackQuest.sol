@@ -5,23 +5,79 @@ pragma solidity ^0.8.22;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract HackQuest is ERC721, ERC721URIStorage, Ownable {
+    using ECDSA for bytes32;
+
+    string[3] private ipfsUris = [
+        // 初始化 NFT
+        "https://salmon-total-owl-496.mypinata.cloud/ipfs/QmRBMSv8ds1CdwCvhYbkNvbDyMSW1YTUq3L3sSva4qA2vM/0.json",
+        // 进度 50% 的 NFT
+        "https://salmon-total-owl-496.mypinata.cloud/ipfs/QmRBMSv8ds1CdwCvhYbkNvbDyMSW1YTUq3L3sSva4qA2vM/1.json",
+        // 进度 100% 的 NFT
+        "https://salmon-total-owl-496.mypinata.cloud/ipfs/QmRBMSv8ds1CdwCvhYbkNvbDyMSW1YTUq3L3sSva4qA2vM/2.json"
+    ];
+
     uint256 private _nextTokenId;
+    address private _signer;
 
-    constructor(address initialOwner)
+    constructor(address signer)
         ERC721("HackQuest", "HQ")
-        Ownable(initialOwner)
-    {}
+        Ownable(msg.sender)
+    {
+        _signer = signer;
+    }
 
-    function safeMint(address to, string memory uri) public onlyOwner {
+
+    function safeMint() public {
         uint256 tokenId = _nextTokenId++;
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
+        _safeMint(msg.sender, tokenId);
+        _setTokenURI(tokenId, ipfsUris[0]);
+    }
+
+    function compleCourse(uint256 tokenId, uint8 progress, bytes memory signature) public {
+        // verify signature
+
+        bytes32 _msgHash = getMessageHash(msg.sender, tokenId, progress);
+        // 计算以太坊签名消息
+        bytes32 _ethSignedMessageHash = toEthSignedMessageHash(_msgHash);
+        require(verify(_ethSignedMessageHash, signature), "Invalid signature");
+
+        // verify tokenId
+        address from = _ownerOf(tokenId);
+        require(from == msg.sender, "Invalid NFT");
+
+
+        if (progress == 5) {
+             _setTokenURI(tokenId, ipfsUris[1]);
+        } else if (progress == 10) {
+             _setTokenURI(tokenId, ipfsUris[2]);
+        }
+    }
+
+    
+
+    /*
+     * 生成消息哈希
+     */
+    function getMessageHash(address _account, uint256 _tokenId, uint8 _progress) public pure returns(bytes32) {
+        return keccak256(abi.encodePacked(_account, _tokenId, _progress));
+    }
+    
+    function toEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32) {
+        // 32 is the length in bytes of hash,
+        // enforced by the type signature above
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+    }
+
+    // ECDSA验证，调用ECDSA库的verify()函数
+    function verify(bytes32 _msgHash, bytes memory _signature) public view returns (bool) {
+        (address recovered,,) = ECDSA.tryRecover(_msgHash, _signature);
+        return recovered == _signer;
     }
 
     // The following functions are overrides required by Solidity.
-
     function tokenURI(uint256 tokenId)
         public
         view
