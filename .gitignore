@@ -14,5 +14,5 @@ docs/
 .env
 
 .github
-.lib
-.broadcast
+lib/
+broadcast/
