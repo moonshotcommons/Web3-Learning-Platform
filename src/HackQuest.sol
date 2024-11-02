@@ -19,8 +19,16 @@ contract HackQuest is ERC721, ERC721URIStorage, Ownable {
         "https://salmon-total-owl-496.mypinata.cloud/ipfs/QmRBMSv8ds1CdwCvhYbkNvbDyMSW1YTUq3L3sSva4qA2vM/2.json"
     ];
 
+    enum CourseProgress {
+        INIT,
+        PROGRESS_HALF,
+        PROGRESS_COMPLETE
+    }
+
     uint256 private _nextTokenId;
-    address private _signer;
+    address public _signer;
+    mapping(bytes => bool) public _signatures;
+    mapping(uint256 => CourseProgress) public _courseProgress;
 
     constructor(address signer)
         ERC721("HackQuest", "HQ")
@@ -34,30 +42,34 @@ contract HackQuest is ERC721, ERC721URIStorage, Ownable {
         uint256 tokenId = _nextTokenId++;
         _safeMint(msg.sender, tokenId);
         _setTokenURI(tokenId, ipfsUris[0]);
+        _courseProgress[tokenId] = CourseProgress.INIT;
     }
 
-    function compleCourse(uint256 tokenId, uint8 progress, bytes memory signature) public {
+    function updateCourseProgress(uint256 tokenId, uint8 progress, bytes memory signature) public {
         // verify signature
-
+        require(!_signatures[signature], "Signature Already Used");
         bytes32 _msgHash = getMessageHash(msg.sender, tokenId, progress);
-        // 计算以太坊签名消息
         bytes32 _ethSignedMessageHash = toEthSignedMessageHash(_msgHash);
-        require(verify(_ethSignedMessageHash, signature), "Invalid signature");
+        require(verify(_ethSignedMessageHash, signature), "Invalid Signature");
+        _signatures[signature] = true;
 
         // verify tokenId
         address from = _ownerOf(tokenId);
-        require(from == msg.sender, "Invalid NFT");
+        require(from == msg.sender, "Invalid TokenId");
 
+        // verify course progress
+        require(_courseProgress[tokenId] == CourseProgress.INIT || _courseProgress[tokenId] == CourseProgress.PROGRESS_HALF, "Course Progress Error");
 
-        if (progress == 5) {
-             _setTokenURI(tokenId, ipfsUris[1]);
-        } else if (progress == 10) {
-             _setTokenURI(tokenId, ipfsUris[2]);
+        if (progress == uint8(CourseProgress.PROGRESS_HALF)) {
+            _courseProgress[tokenId] = CourseProgress.PROGRESS_HALF;
+            _setTokenURI(tokenId, ipfsUris[1]);
+        } else if (progress == uint8(CourseProgress.PROGRESS_COMPLETE)) {
+            _courseProgress[tokenId] = CourseProgress.PROGRESS_COMPLETE;
+            _setTokenURI(tokenId, ipfsUris[2]);
         }
     }
 
     
-
     /*
      * 生成消息哈希
      */

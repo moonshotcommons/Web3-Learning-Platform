@@ -48,12 +48,13 @@ $ anvil
 ### Deploy
 
 ```shell
-服务器私钥，用于签名：0x2F380B03E9b53CE91F0D74A5eE020Cd1Afc99C96
+服务器端账户，用于签名：0x2F380B03E9b53CE91F0D74A5eE020Cd1Afc99C96
 forge create --rpc-url sepolia --private-key $DEPLOYER_PRIVATE_KEY --verify src/HackQuest.sol:HackQuest --constructor-args 0x2F380B03E9b53CE91F0D74A5eE020Cd1Afc99C96
 
 
 forge script script/HackQuest.s.sol:HackQuestScript --rpc-url sepolia --broadcast --verify -vvvv
 
+forge test --match-path test/HackQuest.t.sol -vvvv
 -- mint NFT
 0x0794e3D4B37d2d2B5732cd71Bd316d0b59e96055
 export alice=xxx
