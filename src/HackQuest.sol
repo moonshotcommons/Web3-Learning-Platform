@@ -12,11 +12,11 @@ contract HackQuest is ERC721, ERC721URIStorage, Ownable {
 
     string[3] private ipfsUris = [
         // 初始化 NFT
-        "https://salmon-total-owl-496.mypinata.cloud/ipfs/QmRBMSv8ds1CdwCvhYbkNvbDyMSW1YTUq3L3sSva4qA2vM/0.json",
+        "ipfs://QmaWKA1oQ7DMurioZ7fpyJWF8jkZN4w43bKmsYS8hgQQoT",
         // 进度 50% 的 NFT
-        "https://salmon-total-owl-496.mypinata.cloud/ipfs/QmRBMSv8ds1CdwCvhYbkNvbDyMSW1YTUq3L3sSva4qA2vM/1.json",
+        "ipfs://QmTsxJitqqqfJYYvEU3q3ogKMadU8mnbtWWwtNg9BkcVXa",
         // 进度 100% 的 NFT
-        "https://salmon-total-owl-496.mypinata.cloud/ipfs/QmRBMSv8ds1CdwCvhYbkNvbDyMSW1YTUq3L3sSva4qA2vM/2.json"
+        "ipfs://QmZooiszjSdiGpG2ZUKjrPykHaMjMKRFTigxY2HMVMYdYv"
     ];
 
     enum CourseProgress {
